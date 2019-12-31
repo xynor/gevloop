@@ -24,7 +24,7 @@ type EvLoop struct {
 }
 
 func Init() (*EvLoop, error) {
-	el := &EvLoop{}
+	el := EvLoop{}
 	fd, err := syscall.EpollCreate1(0)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func Init() (*EvLoop, error) {
 	el.pendingQueue = make([]Event, 0)
 	el.eventIO = make([]*EvIO, 0)
 	el.numbEvIO()
-	return el, nil
+	return &el, nil
 }
 
 func (el *EvLoop) Run() error {
