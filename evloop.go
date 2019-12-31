@@ -111,7 +111,7 @@ func (el *EvLoop) numbEvIO() {
 	numb := EvIO{}
 	numb.Init(el, func(evLoop *EvLoop, event Event, revent uint32) {
 		fmt.Println("Numb EVIO Called,must be something wrong")
-	}, fd, syscall.EPOLLIN|syscall.EPOLLET, nil)
+	}, fd, syscall.EPOLLIN|syscall.EPOLLET&0xffffffff, nil)
 	numb.Start()
 	return
 }
