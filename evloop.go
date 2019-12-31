@@ -90,7 +90,7 @@ func (el *EvLoop) Stop() {
 func (el *EvLoop) pendingCB() {
 	for _, v := range el.pendingQueue {
 		if v.IsActive() {
-			v.cb(el, 0)
+			v.cb(el)
 		}
 	}
 	el.pendingQueue = make([]Event, 0)
