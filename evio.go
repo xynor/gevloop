@@ -4,6 +4,7 @@ import "syscall"
 
 type EvIO struct {
 	fd      int
+	el      *EvLoop
 	active  bool
 	event   syscall.EpollEvent
 	revent  uint32
@@ -11,16 +12,14 @@ type EvIO struct {
 	data    interface{}
 }
 
-func (evIo *EvIO) cb(el *evLoop, revent uint32) {
+func (evIo *EvIO) cb(el *EvLoop, revent uint32) {
 	evIo.handler(el, evIo, revent)
 }
 
-func (evIo *EvIO) Stop() error {
-	return nil
+func (evIo *EvIO) Stop() {
 }
 
-func (evIo *EvIO) Start() error {
-	return nil
+func (evIo *EvIO) Start() {
 }
 
 func (evIo *EvIO) IsActive() bool {

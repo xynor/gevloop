@@ -6,15 +6,15 @@ import (
 	"syscall"
 )
 
-type HandlerFunc func(evLoop *evLoop, event Event, revent uint32)
+type HandlerFunc func(evLoop *EvLoop, event Event, revent uint32)
 type Event interface {
-	Stop() error
-	Start() error
+	Stop()
+	Start()
 	IsActive() bool
-	cb(el *evLoop, revent uint32)
+	cb(el *EvLoop, revent uint32)
 }
 
-type evLoop struct {
+type EvLoop struct {
 	fd           int
 	active       bool
 	timeOut      int
@@ -23,8 +23,8 @@ type evLoop struct {
 	pendingQueue []Event
 }
 
-func Init() (*evLoop, error) {
-	el := &evLoop{}
+func Init() (*EvLoop, error) {
+	el := &EvLoop{}
 	fd, err := syscall.EpollCreate(1)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func Init() (*evLoop, error) {
 	return el, nil
 }
 
-func (el *evLoop) Run() error {
+func (el *EvLoop) Run() error {
 	el.active = true
 	for el.active {
 		if el.timerHeap.Len() > 0 {
@@ -81,11 +81,11 @@ func (el *evLoop) Run() error {
 	return nil
 }
 
-func (el *evLoop) Stop() {
+func (el *EvLoop) Stop() {
 	el.active = false
 }
 
-func (el *evLoop) pendingCB() {
+func (el *EvLoop) pendingCB() {
 	for _, v := range el.pendingQueue {
 		if v.IsActive() {
 			v.cb(el, 1)
@@ -94,6 +94,6 @@ func (el *evLoop) pendingCB() {
 	el.pendingQueue = make([]Event, 0)
 }
 
-func (el *evLoop) add2PendingQueue(events []Event) {
+func (el *EvLoop) add2PendingQueue(events []Event) {
 	el.pendingQueue = append(el.pendingQueue, events...)
 }

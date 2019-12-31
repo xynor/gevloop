@@ -1,6 +1,13 @@
 package gevloop
 
+import (
+	"container/heap"
+	"errors"
+	"syscall"
+)
+
 type EvTimer struct {
+	el      *EvLoop
 	at      int
 	active  bool
 	repeat  int
@@ -8,20 +15,46 @@ type EvTimer struct {
 	data    interface{}
 }
 
-func (evTimer *EvTimer) cb(el *evLoop, revent uint32) {
+func (evTimer *EvTimer) cb(el *EvLoop, revent uint32) {
+	revent = syscall.SYS_TIMES
 	evTimer.handler(el, evTimer, revent)
 }
 
-func (evTimer *EvTimer) Stop() error {
+func (evTimer *EvTimer) Init(el *EvLoop, handler HandlerFunc, at, repeat int, data interface{}) error {
+	if el == nil {
+		return errors.New("evLoop is nil")
+	}
+	evTimer.el = el
+	evTimer.at = at
+	evTimer.handler = handler
+	evTimer.repeat = repeat
+	evTimer.data = data
+	evTimer.active = false
 	return nil
 }
 
-func (evTimer *EvTimer) Start() error {
-	return nil
+func (evTimer *EvTimer) Stop() {
+	evTimer.active = false
+	for i := 0; i < evTimer.el.timerHeap.Len(); i++ {
+		n := (*evTimer.el.timerHeap)[i]
+		if n == evTimer {
+			(*evTimer.el.timerHeap)[i], (*evTimer.el.timerHeap)[evTimer.el.timerHeap.Len()-1] =
+				(*evTimer.el.timerHeap)[evTimer.el.timerHeap.Len()-1], (*evTimer.el.timerHeap)[i]
+			*evTimer.el.timerHeap = (*evTimer.el.timerHeap)[:evTimer.el.timerHeap.Len()-1]
+			i--
+		}
+	}
+
+	heap.Init(evTimer.el.timerHeap)
+}
+
+func (evTimer *EvTimer) Start() {
+	evTimer.active = true
+	heap.Push(evTimer.el.timerHeap, evTimer)
 }
 
 func (evTimer *EvTimer) IsActive() bool {
-	return true
+	return evTimer.active
 }
 
 type EvTimerHeap []*EvTimer
