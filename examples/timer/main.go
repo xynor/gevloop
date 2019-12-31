@@ -19,7 +19,7 @@ func main() {
 	timer1.Start()
 
 	timer2 := gevloop.EvTimer{}
-	timer1.Init(el, func(evLoop *gevloop.EvLoop, event gevloop.Event, revent uint32) {
+	timer2.Init(el, func(evLoop *gevloop.EvLoop, event gevloop.Event, revent uint32) {
 		fmt.Println("timer2 Called", timer2, revent)
 	}, 2000, 4000, nil)
 	timer2.Start()

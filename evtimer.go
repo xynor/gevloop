@@ -33,7 +33,7 @@ func (evTimer *EvTimer) Init(el *EvLoop, handler HandlerFunc, at, repeat int, da
 	return nil
 }
 
-func (evTimer *EvTimer) Stop() {
+func (evTimer *EvTimer) Stop() error {
 	evTimer.active = false
 	for i := 0; i < evTimer.el.timerHeap.Len(); i++ {
 		n := (*evTimer.el.timerHeap)[i]
@@ -46,11 +46,13 @@ func (evTimer *EvTimer) Stop() {
 	}
 
 	heap.Init(evTimer.el.timerHeap)
+	return nil
 }
 
-func (evTimer *EvTimer) Start() {
+func (evTimer *EvTimer) Start() error {
 	evTimer.active = true
 	heap.Push(evTimer.el.timerHeap, evTimer)
+	return nil
 }
 
 func (evTimer *EvTimer) IsActive() bool {
