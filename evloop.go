@@ -11,7 +11,7 @@ type Event interface {
 	Stop() error
 	Start() error
 	IsActive() bool
-	cb(el *EvLoop, revent uint32)
+	cb(el *EvLoop)
 }
 
 type EvLoop struct {

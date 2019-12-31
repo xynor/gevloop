@@ -15,8 +15,8 @@ type EvIO struct {
 	data    interface{}
 }
 
-func (evIo *EvIO) cb(el *EvLoop, revent uint32) {
-	revent = evIo.revents
+func (evIo *EvIO) cb(el *EvLoop) {
+	revent := evIo.revents
 	evIo.handler(el, evIo, revent)
 }
 

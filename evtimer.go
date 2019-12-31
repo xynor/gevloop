@@ -15,8 +15,8 @@ type EvTimer struct {
 	data    interface{}
 }
 
-func (evTimer *EvTimer) cb(el *EvLoop, revent uint32) {
-	revent = syscall.SYS_TIMES
+func (evTimer *EvTimer) cb(el *EvLoop) {
+	revent := uint32(syscall.SYS_TIMES)
 	evTimer.handler(el, evTimer, revent)
 }
 
