@@ -30,6 +30,7 @@ func (evIo *EvIO) Init(el *EvLoop, handler HandlerFunc, fd int, Events uint32, d
 	evIo.events.Events = Events
 	evIo.handler = handler
 	evIo.data = data
+	evIo.el = el
 	return nil
 }
 
