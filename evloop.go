@@ -46,10 +46,10 @@ func (el *EvLoop) Run() error {
 		timeNow := int(time.Now().UnixNano() / 1e6)
 		if el.timerList.Len() > 0 {
 			triggerTime := el.timerList.Front().Value.(*EvTimer).triggerTime
-			if timeNow <= triggerTime {
+			if timeNow >= triggerTime {
 				el.timeOut = 0
 			} else {
-				el.timeOut = timeNow - triggerTime
+				el.timeOut = triggerTime - timeNow
 			}
 		}
 		var events []syscall.EpollEvent
@@ -70,9 +70,9 @@ func (el *EvLoop) Run() error {
 					break
 				}
 			}
-			for e := el.timerList.Front(); e != nil; e = e.Next() {
-				e.Value.(*EvTimer).triggerTime -= timeNow
-			}
+			//for e := el.timerList.Front(); e != nil; e = e.Next() {
+			//	e.Value.(*EvTimer).triggerTime -= timeNow
+			//}
 		} else if nevents > 0 {
 			fmt.Println("io event...")
 			for _, v := range events {

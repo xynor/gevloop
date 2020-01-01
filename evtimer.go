@@ -19,7 +19,7 @@ func (evTimer *EvTimer) cb(el *EvLoop) {
 	revent := uint32(syscall.SYS_TIMES)
 	evTimer.active = false
 	if evTimer.repeat != 0 {
-		evTimer.triggerTime += evTimer.repeat
+		evTimer.triggerTime = int(time.Now().UnixNano()/1e6) + evTimer.repeat
 		evTimer.Start()
 	}
 	evTimer.handler(el, evTimer, revent)
@@ -34,7 +34,7 @@ func (evTimer *EvTimer) Init(el *EvLoop, handler HandlerFunc, at, repeat int, da
 	evTimer.repeat = repeat
 	evTimer.data = data
 	evTimer.active = false
-	evTimer.triggerTime = int(time.Now().UnixNano() / 1e6)
+	evTimer.triggerTime = int(time.Now().UnixNano()/1e6) + at
 	return nil
 }
 
