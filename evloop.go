@@ -12,6 +12,7 @@ type Event interface {
 	Stop() error
 	Start() error
 	IsActive() bool
+	Data() interface{}
 	cb(el *EvLoop)
 }
 
@@ -34,6 +35,7 @@ func Init() (*EvLoop, error) {
 	el.active = false
 	el.timeOut = -1
 	el.timerList = list.New()
+	//TODO maybe should use minHeap
 	el.pendingQueue = make([]Event, 0)
 	el.eventIO = make([]*EvIO, 0)
 	el.numbEvIO()
@@ -61,7 +63,6 @@ func (el *EvLoop) Run() error {
 			return err
 		}
 		if nevents == 0 { //timeout
-			fmt.Println("evloop timeout....")
 			for e := el.timerList.Front(); e != nil; e = e.Next() {
 				if e.Value.(*EvTimer).triggerTime <= timeNow {
 					el.timerList.Remove(e)
@@ -70,11 +71,7 @@ func (el *EvLoop) Run() error {
 					break
 				}
 			}
-			//for e := el.timerList.Front(); e != nil; e = e.Next() {
-			//	e.Value.(*EvTimer).triggerTime -= timeNow
-			//}
 		} else if nevents > 0 {
-			fmt.Println("io event...")
 			for _, v := range events {
 				for _, j := range el.eventIO {
 					if v.Fd == int32(j.fd) {
@@ -84,7 +81,6 @@ func (el *EvLoop) Run() error {
 				}
 			}
 		}
-		fmt.Println("CALL...")
 		el.pendingCB()
 		if !el.active {
 			break
@@ -120,7 +116,7 @@ func (el *EvLoop) numbEvIO() {
 	}
 	numb := EvIO{}
 	numb.Init(el, func(evLoop *EvLoop, event Event, revent uint32) {
-		fmt.Println("Numb EVIO Called,must be something wrong")
+		fmt.Println("Numb EVIO Called,Loop running")
 	}, fd, syscall.EPOLLIN|syscall.EPOLLET&0xffffffff, nil)
 	numb.Start()
 	return

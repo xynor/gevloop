@@ -51,17 +51,18 @@ func (evTimer *EvTimer) Stop() error {
 
 func (evTimer *EvTimer) Start() error {
 	evTimer.active = true
-	if evTimer.el.timerList.Len() == 0 {
-		evTimer.el.timerList.PushFront(evTimer)
-	}
 	for e := evTimer.el.timerList.Front(); e != nil; e = e.Next() {
-		if e.Value.(*EvTimer).triggerTime > evTimer.triggerTime {
+		if e.Value.(*EvTimer).triggerTime >= evTimer.triggerTime {
 			evTimer.el.timerList.InsertBefore(evTimer, e)
 			return nil
 		}
 	}
 	evTimer.el.timerList.PushBack(evTimer)
 	return nil
+}
+
+func (evTimer *EvTimer) Data() interface{} {
+	return evTimer.data
 }
 
 func (evTimer *EvTimer) IsActive() bool {

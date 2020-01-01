@@ -54,6 +54,10 @@ func (evIo *EvIO) Start() error {
 	return nil
 }
 
+func (evIo *EvIO) Data() interface{} {
+	return evIo.data
+}
+
 func (evIo *EvIO) IsActive() bool {
 	return evIo.active
 }
