@@ -1,22 +1,27 @@
 package gevloop
 
 import (
-	"container/heap"
 	"errors"
 	"syscall"
+	"time"
 )
 
 type EvTimer struct {
-	el      *EvLoop
-	at      int
-	active  bool
-	repeat  int
-	handler HandlerFunc
-	data    interface{}
+	el          *EvLoop
+	active      bool
+	repeat      int
+	triggerTime int
+	handler     HandlerFunc
+	data        interface{}
 }
 
 func (evTimer *EvTimer) cb(el *EvLoop) {
 	revent := uint32(syscall.SYS_TIMES)
+	evTimer.active = false
+	if evTimer.repeat != 0 {
+		evTimer.triggerTime += evTimer.repeat
+		evTimer.Start()
+	}
 	evTimer.handler(el, evTimer, revent)
 }
 
@@ -25,33 +30,33 @@ func (evTimer *EvTimer) Init(el *EvLoop, handler HandlerFunc, at, repeat int, da
 		return errors.New("evLoop is nil")
 	}
 	evTimer.el = el
-	evTimer.at = at
 	evTimer.handler = handler
 	evTimer.repeat = repeat
 	evTimer.data = data
 	evTimer.active = false
+	evTimer.triggerTime = time.Now().Nanosecond()/1e6 + at
 	return nil
 }
 
 func (evTimer *EvTimer) Stop() error {
 	evTimer.active = false
-	for i := 0; i < evTimer.el.timerHeap.Len(); i++ {
-		n := (*evTimer.el.timerHeap)[i]
-		if n == evTimer {
-			(*evTimer.el.timerHeap)[i], (*evTimer.el.timerHeap)[evTimer.el.timerHeap.Len()-1] =
-				(*evTimer.el.timerHeap)[evTimer.el.timerHeap.Len()-1], (*evTimer.el.timerHeap)[i]
-			*evTimer.el.timerHeap = (*evTimer.el.timerHeap)[:evTimer.el.timerHeap.Len()-1]
-			i--
+	for e := evTimer.el.timerList.Front(); e != nil; e = e.Next() {
+		if e.Value.(*EvTimer) == evTimer {
+			evTimer.el.timerList.Remove(e)
+			break
 		}
 	}
-
-	heap.Init(evTimer.el.timerHeap)
 	return nil
 }
 
 func (evTimer *EvTimer) Start() error {
 	evTimer.active = true
-	heap.Push(evTimer.el.timerHeap, evTimer)
+	for e := evTimer.el.timerList.Front(); e != nil; e = e.Next() {
+		if e.Value.(*EvTimer).triggerTime > evTimer.triggerTime {
+			evTimer.el.timerList.InsertBefore(evTimer, e)
+			break
+		}
+	}
 	return nil
 }
 
@@ -62,7 +67,7 @@ func (evTimer *EvTimer) IsActive() bool {
 type EvTimerHeap []*EvTimer
 
 func (h EvTimerHeap) Len() int           { return len(h) }
-func (h EvTimerHeap) Less(i, j int) bool { return h[i].at < h[j].at }
+func (h EvTimerHeap) Less(i, j int) bool { return h[i].triggerTime < h[j].triggerTime }
 func (h EvTimerHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 func (h *EvTimerHeap) Push(x interface{}) {
 	// Push and Pop use pointer receivers because they modify the slice's length,

@@ -1,9 +1,10 @@
 package gevloop
 
 import (
-	"container/heap"
+	"container/list"
 	"fmt"
 	"syscall"
+	"time"
 )
 
 type HandlerFunc func(evLoop *EvLoop, event Event, revent uint32)
@@ -19,7 +20,7 @@ type EvLoop struct {
 	active       bool
 	timeOut      int
 	eventIO      []*EvIO
-	timerHeap    *EvTimerHeap
+	timerList    *list.List
 	pendingQueue []Event
 }
 
@@ -32,8 +33,7 @@ func Init() (*EvLoop, error) {
 	el.fd = fd
 	el.active = false
 	el.timeOut = -1
-	el.timerHeap = &EvTimerHeap{}
-	heap.Init(el.timerHeap)
+	el.timerList = list.New()
 	el.pendingQueue = make([]Event, 0)
 	el.eventIO = make([]*EvIO, 0)
 	el.numbEvIO()
@@ -43,8 +43,14 @@ func Init() (*EvLoop, error) {
 func (el *EvLoop) Run() error {
 	el.active = true
 	for el.active {
-		if el.timerHeap.Len() > 0 {
-			el.timeOut = (*el.timerHeap)[0].at
+		timeNow := time.Now().Nanosecond() / 1e6
+		if el.timerList.Len() > 0 {
+			triggerTime := el.timerList.Front().Value.(*EvTimer).triggerTime
+			if timeNow <= timeNow {
+				el.timeOut = 0
+			} else {
+				el.timeOut = timeNow - triggerTime
+			}
 		}
 		var events []syscall.EpollEvent
 		for _, v := range el.eventIO {
@@ -56,12 +62,16 @@ func (el *EvLoop) Run() error {
 		}
 		if nevents == 0 { //timeout
 			fmt.Println("evloop timeout....")
-			//add first timeout timer to pendingQueue
-			el.add2PendingQueue([]Event{(*el.timerHeap)[0]})
-			timeOut := heap.Pop(el.timerHeap).(*EvTimer)
-			if timeOut.repeat > 0 {
-				timeOut.at = timeOut.repeat
-				heap.Push(el.timerHeap, timeOut)
+			for e := el.timerList.Front(); e != nil; e = e.Next() {
+				if e.Value.(*EvTimer).triggerTime <= timeNow {
+					el.timerList.Remove(e)
+					el.add2PendingQueue([]Event{e.Value.(*EvTimer)})
+				} else {
+					break
+				}
+			}
+			for e := el.timerList.Front(); e != nil; e = e.Next() {
+				e.Value.(*EvTimer).triggerTime -= timeNow
 			}
 		} else if nevents > 0 {
 			fmt.Println("io event...")
