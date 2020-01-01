@@ -43,10 +43,10 @@ func Init() (*EvLoop, error) {
 func (el *EvLoop) Run() error {
 	el.active = true
 	for el.active {
-		timeNow := time.Now().Nanosecond() / 1e6
+		timeNow := int(time.Now().UnixNano() / 1e6)
 		if el.timerList.Len() > 0 {
 			triggerTime := el.timerList.Front().Value.(*EvTimer).triggerTime
-			if timeNow <= timeNow {
+			if timeNow <= triggerTime {
 				el.timeOut = 0
 			} else {
 				el.timeOut = timeNow - triggerTime
