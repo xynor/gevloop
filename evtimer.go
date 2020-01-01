@@ -57,9 +57,10 @@ func (evTimer *EvTimer) Start() error {
 	for e := evTimer.el.timerList.Front(); e != nil; e = e.Next() {
 		if e.Value.(*EvTimer).triggerTime > evTimer.triggerTime {
 			evTimer.el.timerList.InsertBefore(evTimer, e)
-			break
+			return nil
 		}
 	}
+	evTimer.el.timerList.PushBack(evTimer)
 	return nil
 }
 
