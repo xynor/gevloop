@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/xinxuwang/gevloop"
 	"log"
 	"net"
@@ -57,7 +58,13 @@ func main() {
 			for {
 				nbytes, e := syscall.Read(event.Fd(), buf)
 				sess := event.Data().(*session)
+				if e != nil {
+					log.Println("Read Error:", e)
+					return
+				}
+
 				if nbytes > 0 {
+					fmt.Println("Read n:", nbytes)
 					sess.pos = nbytes
 					copy(sess.bytes[sess.pos:], buf)
 					if 5 == len(sess.bytes) {
@@ -66,9 +73,14 @@ func main() {
 						return
 					}
 				}
-				if e != nil {
-					break
+				if nbytes == 0 {
+					log.Println("close")
+					syscall.Close(event.Fd())
+					event.Stop()
+					return
 				}
+				fmt.Println("Read < 0")
+				return
 			}
 		}, connFd, syscall.EPOLLIN, &sess)
 		connFdIO.Start()

@@ -2,6 +2,7 @@ package gevloop
 
 import (
 	"errors"
+	"fmt"
 	"syscall"
 )
 
@@ -36,11 +37,16 @@ func (evIo *EvIO) Init(el *EvLoop, handler HandlerFunc, fd int, Events uint32, d
 
 func (evIo *EvIO) Stop() error {
 	evIo.active = false
-	evIo.el.eventIO = append(evIo.el.eventIO, evIo)
 	if err := syscall.EpollCtl(evIo.el.fd, syscall.EPOLL_CTL_DEL, evIo.fd, &evIo.events); err != nil {
 		return err
 	}
-
+	for k, _ := range evIo.el.eventIO {
+		if evIo.el.eventIO[k] == evIo {
+			evIo.el.eventIO = append(evIo.el.eventIO[:k], evIo.el.eventIO[k+1:]...)
+			return nil
+		}
+	}
+	fmt.Println("Not Found evio:", evIo)
 	return nil
 }
 
@@ -58,7 +64,7 @@ func (evIo *EvIO) Data() interface{} {
 	return evIo.data
 }
 
-func (evIo *EvIO) Fd()int {
+func (evIo *EvIO) Fd() int {
 	return evIo.fd
 }
 
