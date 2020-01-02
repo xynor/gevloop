@@ -30,6 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatal("err:", err)
 	}
+	log.Println("Accept fd:", accept)
 	acceptIO := gevloop.EvIO{}
 	acceptIO.Init(el, func(evLoop *gevloop.EvLoop, event gevloop.Event, revent uint32) {
 		log.Println("AcceptIO Called")

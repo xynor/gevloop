@@ -55,7 +55,7 @@ func (el *EvLoop) Run() error {
 				el.timeOut = triggerTime - timeNow
 			}
 		}
-		var events []syscall.EpollEvent
+		events := make([]syscall.EpollEvent, 64)
 		for _, v := range el.eventIO {
 			events = append(events, v.events)
 		}
@@ -63,6 +63,7 @@ func (el *EvLoop) Run() error {
 		if err != nil {
 			return err
 		}
+		fmt.Println("events:", events)
 		if nevents == 0 { //timeout
 			for e := el.timerList.Front(); e != nil; e = e.Next() {
 				if e.Value.(*EvTimer).triggerTime <= timeNow {
