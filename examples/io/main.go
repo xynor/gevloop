@@ -7,6 +7,11 @@ import (
 	"syscall"
 )
 
+type session struct {
+	bytes []byte
+	pos   int
+}
+
 func main() {
 	accept, err := syscall.Socket(syscall.AF_INET, syscall.O_NONBLOCK|syscall.SOCK_STREAM, 0)
 	if err != nil {
@@ -41,22 +46,32 @@ func main() {
 		}
 		syscall.SetNonblock(connFd, true)
 		connFdIO := gevloop.EvIO{}
+		sess := session{
+			bytes: make([]byte, 5),
+			pos:   0,
+		}
 		connFdIO.Init(el, func(evLoop *gevloop.EvLoop, event gevloop.Event, revent uint32) {
 			log.Println("connFdIO Called")
 			//assume `HELLO`
-			var buf [5]byte
+			buf := make([]byte, 5)
 			for {
-				//for test,assume `HELLO` recieved one time.
-				//we do not know how many bytes can Read from socket
-				nbytes, e := syscall.Read(event.Fd(), buf[:])
+				nbytes, e := syscall.Read(event.Fd(), buf)
 				if nbytes > 0 {
-					log.Printf(">>> %s", buf)
+					if nbytes == len(buf) {
+						log.Println(string(buf))
+						sess := event.Data().(*session)
+						sess.pos = 0
+						return
+					}
+					sess := event.Data().(*session)
+					sess.pos = nbytes
+					copy(sess.bytes[sess.pos:], buf)
 				}
 				if e != nil {
 					break
 				}
 			}
-		}, connFd, syscall.EPOLLIN, nil)
+		}, connFd, syscall.EPOLLIN, &sess)
 		connFdIO.Start()
 	}, accept, syscall.EPOLLIN|syscall.EPOLLET&0xffffffff, nil)
 
