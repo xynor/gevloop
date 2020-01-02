@@ -13,6 +13,7 @@ type Event interface {
 	Start() error
 	IsActive() bool
 	Data() interface{}
+	Fd() int
 	cb(el *EvLoop)
 }
 

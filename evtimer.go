@@ -49,6 +49,10 @@ func (evTimer *EvTimer) Stop() error {
 	return nil
 }
 
+func (evTimer *EvTimer) Fd()int {
+	return 0
+}
+
 func (evTimer *EvTimer) Start() error {
 	evTimer.active = true
 	for e := evTimer.el.timerList.Front(); e != nil; e = e.Next() {
