@@ -54,10 +54,10 @@ func main() {
 		connFdIO.Init(el, func(evLoop *gevloop.EvLoop, event gevloop.Event, revent uint32) {
 			log.Println("connFdIO Called")
 			//assume `HELLO`
-			buf := make([]byte, 5)
 			for {
+				buf := make([]byte, 5)
 				nbytes, err := syscall.Read(event.Fd(), buf)
-				sess := event.Data().(*session)
+				se := event.Data().(*session)
 				if err != nil {
 					log.Println("Read Error:", err)
 					return
@@ -65,10 +65,10 @@ func main() {
 
 				if nbytes > 0 {
 					fmt.Println("Read n:", nbytes)
-					sess.pos = nbytes
-					copy(sess.bytes[sess.pos:], buf)
-					if 5 == len(sess.bytes) {
-						log.Println(string(sess.bytes))
+					copy(se.bytes[se.pos:], buf)
+					se.pos += nbytes
+					if 5 == len(se.bytes) {
+						log.Println(string(se.bytes))
 						sess.pos = 0
 						return
 					}
