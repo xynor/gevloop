@@ -43,8 +43,10 @@ func main() {
 		connFdIO.Init(el, func(evLoop *gevloop.EvLoop, event gevloop.Event, revent uint32) {
 			log.Println("connFdIO Called")
 		}, connFd, syscall.EPOLLIN, nil)
+		connFdIO.Start()
 	}, accept, syscall.EPOLLIN, nil)
 
+	acceptIO.Start()
 	err = el.Run()
 	if err != nil {
 		log.Println("error:", err)
