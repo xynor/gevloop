@@ -56,10 +56,10 @@ func main() {
 			//assume `HELLO`
 			buf := make([]byte, 0)
 			for {
-				nbytes, e := syscall.Read(event.Fd(), buf)
+				nbytes, err := syscall.Read(event.Fd(), buf)
 				sess := event.Data().(*session)
-				if e != nil {
-					log.Println("Read Error:", e)
+				if err != nil {
+					log.Println("Read Error:", err)
 					return
 				}
 
@@ -74,9 +74,9 @@ func main() {
 					}
 				}
 				if nbytes == 0 {
-					log.Println("close")
-					syscall.Close(event.Fd())
-					event.Stop()
+					log.Println("nbytes == 0")
+					//syscall.Close(event.Fd())
+					//event.Stop()
 					return
 				}
 				fmt.Println("Read < 0")
