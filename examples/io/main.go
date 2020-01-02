@@ -53,19 +53,18 @@ func main() {
 		connFdIO.Init(el, func(evLoop *gevloop.EvLoop, event gevloop.Event, revent uint32) {
 			log.Println("connFdIO Called")
 			//assume `HELLO`
-			buf := make([]byte, 5)
+			buf := make([]byte, 0)
 			for {
 				nbytes, e := syscall.Read(event.Fd(), buf)
+				sess := event.Data().(*session)
 				if nbytes > 0 {
-					if nbytes == len(buf) {
-						log.Println(string(buf))
-						sess := event.Data().(*session)
+					sess.pos = nbytes
+					copy(sess.bytes[sess.pos:], buf)
+					if 5 == len(sess.bytes) {
+						log.Println(string(sess.bytes))
 						sess.pos = 0
 						return
 					}
-					sess := event.Data().(*session)
-					sess.pos = nbytes
-					copy(sess.bytes[sess.pos:], buf)
 				}
 				if e != nil {
 					break
