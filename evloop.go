@@ -74,10 +74,10 @@ func (el *EvLoop) Run() error {
 				}
 			}
 		} else if nevents > 0 {
-			for _, v := range events {
+			for i := 0; i < nevents; i++ {
 				for _, j := range el.eventIO {
-					if v.Fd == int32(j.fd) {
-						j.revents = v.Events
+					if events[i].Fd == int32(j.fd) {
+						j.revents = events[i].Events
 						el.add2PendingQueue([]Event{j})
 					}
 				}
