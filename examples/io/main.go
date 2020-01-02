@@ -42,9 +42,22 @@ func main() {
 		connFdIO := gevloop.EvIO{}
 		connFdIO.Init(el, func(evLoop *gevloop.EvLoop, event gevloop.Event, revent uint32) {
 			log.Println("connFdIO Called")
+			//assume `HELLO`
+			var buf [5]byte
+			for {
+				//for test,assume `HELLO` recieved one time.
+				//we do not know how many bytes can Read from socket
+				nbytes, e := syscall.Read(event.Fd(), buf[:])
+				if nbytes > 0 {
+					log.Printf(">>> %s", buf)
+				}
+				if e != nil {
+					break
+				}
+			}
 		}, connFd, syscall.EPOLLIN, nil)
 		connFdIO.Start()
-	}, accept, syscall.EPOLLIN, nil)
+	}, accept, syscall.EPOLLIN|syscall.EPOLLET&0xffffffff, nil)
 
 	acceptIO.Start()
 	err = el.Run()
